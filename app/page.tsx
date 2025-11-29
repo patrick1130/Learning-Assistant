@@ -1,178 +1,256 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import MindMapViewer from './MindMapViewer';
 
-// 1. 定义数据结构 (告诉 TypeScript 数据的样子)
-interface CoreConcept {
-  title: string;
-  description: string;
-}
-
-interface MiniProject {
-  level: string;
-  title: string;
-  description: string;
-  steps: string[];
-}
-
-interface Pitfall {
-  problem: string;
-  solution: string;
-}
-
+// --- 类型定义 (简化版，因为详情是动态加载的) ---
+interface CoreConcept { title: string; short_desc: string; }
+interface MiniProject { level: string; title: string; description: string; steps: string[]; }
+interface Pitfall { problem: string; solution: string; }
 interface LearningResult {
   core_concepts: CoreConcept[];
   mini_projects: MiniProject[];
   pitfalls: Pitfall[];
 }
 
+// --- 通用 Fetch 函数 ---
+async function fetchExpand(type: string, item: any, topic: string, goal: string) {
+  const res = await fetch('/api/expand', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, item, topic, goal }),
+  });
+  return await res.json();
+}
+
+// --- 组件 1: 核心概念 (点击加载详情) ---
+function ConceptCard({ item, topic, goal }: { item: CoreConcept, topic: string, goal: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [detail, setDetail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleToggle = async () => {
+    setIsOpen(!isOpen);
+    // 如果没加载过，且现在要展开，才去请求
+    if (!detail && !isOpen) {
+      setLoading(true);
+      const data = await fetchExpand('concept_detail', item, topic, goal);
+      setDetail(data.content);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div onClick={handleToggle} className="bg-slate-50 p-5 rounded-xl border hover:border-blue-300 cursor-pointer transition-all">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold text-lg">{item.title}</h3>
+        <span className="text-blue-500">{isOpen ? '▲' : '▼'}</span>
+      </div>
+      <p className="text-sm text-slate-600">{item.short_desc}</p>
+      
+      {isOpen && (
+        <div className="mt-3 pt-3 border-t border-slate-200 text-sm leading-6 text-slate-800 bg-white p-3 rounded">
+          {loading ? (
+            <span className="flex items-center text-slate-400">
+              <svg className="animate-spin h-4 w-4 mr-2 text-blue-500" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              AI 正在生成详细解释...
+            </span>
+          ) : detail}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- 组件 2: 实战项目 (点击加载解答) ---
+function ProjectCard({ proj, topic, goal }: { proj: MiniProject, topic: string, goal: string }) {
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [solution, setSolution] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleToggle = async () => {
+    if (!showAnswer && !solution) {
+      setLoading(true);
+      const data = await fetchExpand('project_solution', proj, topic, goal);
+      setSolution(data.content);
+      setLoading(false);
+    }
+    setShowAnswer(!showAnswer);
+  };
+
+  return (
+    <div className="border border-slate-200 rounded-xl p-6 bg-white">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold text-xl">{proj.title}</h3>
+        <span className="bg-slate-100 text-xs font-bold px-2 py-1 rounded">{proj.level}</span>
+      </div>
+      <p className="text-slate-600 mb-4">{proj.description}</p>
+      <ul className="list-disc list-inside text-sm text-slate-700 mb-4 bg-slate-50 p-3 rounded">
+        {proj.steps?.map((s, i) => <li key={i}>{s}</li>)}
+      </ul>
+
+      <button onClick={handleToggle} className="text-sm font-bold text-green-600 flex items-center hover:underline">
+        {showAnswer ? '🙈 隐藏解答' : '🔑 查看解答'}
+      </button>
+
+      {showAnswer && (
+        <div className="mt-3 p-4 bg-green-50 rounded border border-green-100 text-sm whitespace-pre-wrap">
+          {loading ? 'AI 正在编写代码/步骤...' : solution}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- 组件 3: 避坑指南 (点击加载扩展) ---
+function PitfallCard({ pit, topic, goal }: { pit: Pitfall, topic: string, goal: string }) {
+  const [expandedData, setExpandedData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('');
+
+  const loadData = async (tab: string) => {
+    if (activeTab === tab) {
+      setActiveTab(''); // 关闭
+      return;
+    }
+    setActiveTab(tab);
+    
+    // 如果还没加载过数据，先去请求
+    if (!expandedData) {
+      setLoading(true);
+      const data = await fetchExpand('pitfall_expand', pit, topic, goal);
+      setExpandedData(data); // data 是个 JSON 对象
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-xl border shadow-sm">
+      <div className="mb-4">
+        <h3 className="font-bold text-red-900 text-lg">🚫 {pit.problem}</h3>
+        <p className="text-sm text-red-600 mt-1">💡 {pit.solution}</p>
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        {['detail', 'example', 'practice'].map(tab => (
+          <button 
+            key={tab}
+            onClick={() => loadData(tab)}
+            className={`px-3 py-1 text-xs font-bold rounded-full transition-colors ${activeTab === tab ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600'}`}
+          >
+            {tab === 'detail' ? '详细解释' : tab === 'example' ? '示例' : '练习题'}
+          </button>
+        ))}
+      </div>
+
+      <div className="min-h-[60px]">
+        {loading && <div className="text-sm text-slate-400 p-2">AI 正在生成深度内容...</div>}
+        
+        {!loading && expandedData && activeTab === 'detail' && (
+          <div className="bg-slate-50 p-3 rounded text-sm text-slate-800">{expandedData.detailed_explanation}</div>
+        )}
+        
+        {!loading && expandedData && activeTab === 'example' && (
+          <div className="grid gap-2 md:grid-cols-2 text-xs">
+             <div className="bg-red-50 p-2 rounded text-red-800 border border-red-100">❌ {expandedData.example_bad}</div>
+             <div className="bg-green-50 p-2 rounded text-green-800 border border-green-100">✅ {expandedData.example_good}</div>
+          </div>
+        )}
+
+        {!loading && expandedData && activeTab === 'practice' && (
+          <div className="space-y-2">
+            {expandedData.practice_exercises?.map((q: any, i: number) => (
+              <div key={i} className="bg-slate-50 p-2 rounded border text-sm">
+                <div className="font-bold mb-1">Q: {q.question}</div>
+                <details className="text-slate-500 cursor-pointer"><summary>看答案</summary><div className="mt-1 text-slate-800">{q.answer}</div></details>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// --- 主页面 ---
 export default function Home() {
   const [topic, setTopic] = useState('');
   const [goal, setGoal] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // 2. 关键修改：明确告诉 TS，result 可能是 LearningResult 类型，或者是 null
   const [result, setResult] = useState<LearningResult | null>(null);
 
   const handleGenerate = async () => {
     if (!topic || !goal) return;
     setLoading(true);
     setResult(null);
-
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic, goal }),
       });
-      
-      if (!res.ok) throw new Error('Failed to fetch');
-      
       const data = await res.json();
       setResult(data);
-    } catch (error) {
-      console.error(error);
-      alert('服务繁忙，请稍后再试。');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { alert('失败'); } 
+    finally { setLoading(false); }
   };
+
+  // 生成大纲用的 Markdown (不含详情，因为详情是动态的)
+  const markdownContent = useMemo(() => {
+    if (!result || !topic) return '';
+    let md = `# ${topic}\n`;
+    result.core_concepts.forEach(c => md += `- **${c.title}**\n`);
+    result.mini_projects.forEach(p => md += `- **${p.title}**\n`);
+    result.pitfalls.forEach(p => md += `- **${p.problem}**\n`);
+    return md;
+  }, [result, topic]);
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans text-slate-800">
       <div className="max-w-4xl mx-auto">
-        
-        {/* Header */}
-        <header className="mb-12 text-center">
-          <div className="inline-block px-3 py-1 mb-3 text-xs font-semibold tracking-wider text-blue-800 uppercase bg-blue-100 rounded-full">
-            Powered by DeepSeek
-          </div>
-          <h1 className="text-4xl font-bold mb-4 text-slate-900">Pareto 80/20 Learner</h1>
-          <p className="text-slate-600">DeepSeek 大脑为你规划极简学习路径。</p>
+        <header className="mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2">Pareto Learner (Lazy Load版)</h1>
+          <p className="text-slate-500">先出大纲，点击再生成详情，省钱又快。</p>
         </header>
 
-        {/* Input Section */}
-        <div className="bg-white p-8 rounded-2xl shadow-lg mb-10 border border-slate-100">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">我想学习 (技能/工具)</label>
-              <input 
-                type="text" 
-                placeholder="例如：Python, 视频剪辑, 英语口语"
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">目标是能完成 (具体项目)</label>
-              <input 
-                type="text" 
-                placeholder="例如：做一个推特监控机器人"
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-              />
-            </div>
+        <div className="bg-white p-6 rounded-xl shadow mb-8">
+          <div className="grid gap-4 md:grid-cols-2 mb-4">
+             <input className="border p-2 rounded" value={topic} onChange={e => setTopic(e.target.value)} placeholder="想学的技能" />
+             <input className="border p-2 rounded" value={goal} onChange={e => setGoal(e.target.value)} placeholder="目标项目" />
           </div>
-          <button 
-            onClick={handleGenerate}
-            disabled={loading}
-            className={`w-full mt-6 py-4 rounded-lg text-white font-bold text-lg transition-all ${
-              loading ? 'bg-slate-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
-            }`}
-          >
-            {loading ? 'DeepSeek 正在思考...' : '生成学习路径 🚀'}
+          <button onClick={handleGenerate} disabled={loading} className="w-full bg-blue-600 text-white py-3 rounded font-bold hover:bg-blue-700 disabled:bg-slate-300">
+            {loading ? '正在生成大纲...' : '生成学习路径'}
           </button>
         </div>
 
-        {/* Results Section */}
         {result && (
-          <div className="space-y-8 animate-fade-in">
-            
-            {/* 1. Core Concepts */}
-            <section className="bg-white p-8 rounded-2xl shadow-sm border-l-4 border-blue-500">
-              <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <span className="bg-blue-50 text-blue-600 p-2 rounded-lg mr-3 text-xl">🧠</span>
-                关键概念 (The Vital 20%)
-              </h2>
+          <div className="space-y-8 pb-20">
+            {/* 脑图 */}
+            <div className="bg-white p-6 rounded-xl border"><MindMapViewer markdown={markdownContent} /></div>
+
+            {/* 列表 */}
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">🧠 关键概念</h2>
               <div className="grid gap-4 md:grid-cols-2">
-                {/* 这里的 result 已经被 TS 识别为 LearningResult 类型，所以不会报错了 */}
-                {result.core_concepts?.map((item, idx) => (
-                  <div key={idx} className="bg-slate-50 p-5 rounded-xl hover:bg-slate-100 transition-colors">
-                    <h3 className="font-bold text-lg text-slate-900 mb-2">{item.title}</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed">{item.description}</p>
-                  </div>
+                {result.core_concepts.map((item, idx) => (
+                  <ConceptCard key={idx} item={item} topic={topic} goal={goal} />
                 ))}
               </div>
-            </section>
+            </div>
 
-            {/* 2. Mini Projects */}
-            <section className="bg-white p-8 rounded-2xl shadow-sm border-l-4 border-green-500">
-              <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <span className="bg-green-50 text-green-600 p-2 rounded-lg mr-3 text-xl">🛠️</span>
-                实战练习 (Mini Projects)
-              </h2>
-              <div className="space-y-6">
-                {result.mini_projects?.map((proj, idx) => (
-                  <div key={idx} className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="font-bold text-xl text-slate-800">{proj.title}</h3>
-                      <span className="px-3 py-1 text-xs font-bold uppercase tracking-wide bg-slate-100 rounded-full text-slate-600">
-                        {proj.level}
-                      </span>
-                    </div>
-                    <p className="text-slate-600 mb-4">{proj.description}</p>
-                    <div className="bg-slate-50 p-4 rounded-lg">
-                      <p className="text-sm font-bold text-slate-500 mb-2 uppercase">Steps:</p>
-                      <ul className="list-disc list-inside space-y-1 text-sm text-slate-700">
-                        {proj.steps?.map((step, sIdx) => <li key={sIdx}>{step}</li>)}
-                      </ul>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">🛠️ 实战项目</h2>
+              {result.mini_projects.map((proj, idx) => (
+                <ProjectCard key={idx} proj={proj} topic={topic} goal={goal} />
+              ))}
+            </div>
 
-            {/* 3. Pitfalls */}
-            <section className="bg-white p-8 rounded-2xl shadow-sm border-l-4 border-red-500">
-              <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <span className="bg-red-50 text-red-600 p-2 rounded-lg mr-3 text-xl">⚠️</span>
-                避坑指南 (Pitfalls)
-              </h2>
-              <div className="grid gap-4">
-                {result.pitfalls?.map((pit, idx) => (
-                  <div key={idx} className="flex bg-red-50 p-4 rounded-xl items-start">
-                    <div className="mr-4 text-xl mt-1">🚧</div>
-                    <div>
-                      <h3 className="font-bold text-red-900">{pit.problem}</h3>
-                      <p className="text-sm text-red-700 mt-1"><span className="font-bold">💡 解决方案：</span>{pit.solution}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">⚠️ 避坑指南</h2>
+              {result.pitfalls.map((pit, idx) => (
+                <PitfallCard key={idx} pit={pit} topic={topic} goal={goal} />
+              ))}
+            </div>
           </div>
         )}
       </div>
