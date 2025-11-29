@@ -1,0 +1,16 @@
+{
+  "name": "Pareto Learner",
+  "short_name": "80/20学霸",
+  "description": "DeepSeek 驱动的极简学习助手",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
