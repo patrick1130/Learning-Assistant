@@ -24,3 +24,35 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* 梦幻背景动画 */
+@keyframes gradient-xy {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-gradient {
+  background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fad0c4, #a18cd1);
+  background-size: 400% 400%;
+  animation: gradient-xy 15s ease infinite;
+}
+
+/* 毛玻璃卡片通用样式 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.5);
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+.glass-input:focus {
+  background: white;
+  border-color: #a18cd1;
+  box-shadow: 0 0 0 4px rgba(161, 140, 209, 0.2);
+}
