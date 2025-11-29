@@ -2,11 +2,37 @@
 
 import { useState } from 'react';
 
+// 1. 定义数据结构 (告诉 TypeScript 数据的样子)
+interface CoreConcept {
+  title: string;
+  description: string;
+}
+
+interface MiniProject {
+  level: string;
+  title: string;
+  description: string;
+  steps: string[];
+}
+
+interface Pitfall {
+  problem: string;
+  solution: string;
+}
+
+interface LearningResult {
+  core_concepts: CoreConcept[];
+  mini_projects: MiniProject[];
+  pitfalls: Pitfall[];
+}
+
 export default function Home() {
   const [topic, setTopic] = useState('');
   const [goal, setGoal] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  
+  // 2. 关键修改：明确告诉 TS，result 可能是 LearningResult 类型，或者是 null
+  const [result, setResult] = useState<LearningResult | null>(null);
 
   const handleGenerate = async () => {
     if (!topic || !goal) return;
@@ -25,6 +51,7 @@ export default function Home() {
       const data = await res.json();
       setResult(data);
     } catch (error) {
+      console.error(error);
       alert('服务繁忙，请稍后再试。');
     } finally {
       setLoading(false);
@@ -90,6 +117,7 @@ export default function Home() {
                 关键概念 (The Vital 20%)
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
+                {/* 这里的 result 已经被 TS 识别为 LearningResult 类型，所以不会报错了 */}
                 {result.core_concepts?.map((item, idx) => (
                   <div key={idx} className="bg-slate-50 p-5 rounded-xl hover:bg-slate-100 transition-colors">
                     <h3 className="font-bold text-lg text-slate-900 mb-2">{item.title}</h3>
