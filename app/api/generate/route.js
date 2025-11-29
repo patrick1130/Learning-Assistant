@@ -1,83 +1,60 @@
 import OpenAI from "openai";
 import { NextResponse } from "next/server";
 
-// 确保 API Key 存在
-const apiKey = process.env.DEEPSEEK_API_KEY;
-
-const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: apiKey, 
-});
-
+// 注意：不要在函数外面初始化 OpenAI，否则构建会失败
 export async function POST(req) {
-  // 1. 检查 API Key 是否读取成功
-  if (!apiKey) {
-    console.error("错误: 找不到 DEEPSEEK_API_KEY。请检查 .env.local 文件并重启服务器。");
-    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-  }
-
   try {
-    const { topic, goal } = await req.json();
-
-    if (!topic || !goal) {
-      return NextResponse.json({ error: 'Missing topic or goal' }, { status: 400 });
+    // 1. 在函数内部获取 Key (运行时才有)
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    
+    // 安全检查：如果没有 Key，优雅地报错，而不是让服务器崩溃
+    if (!apiKey) {
+      console.error("❌ 错误: 未找到 API Key");
+      return NextResponse.json({ error: 'Server configuration error: Missing API Key' }, { status: 500 });
     }
 
-    console.log(`[DeepSeek] 正在请求: ${topic} - ${goal}`);
+    // 2. 在函数内部初始化 OpenAI 实例
+    // 这样只有当请求真正发生时，才会去连接 DeepSeek
+    const openai = new OpenAI({
+      baseURL: 'https://api.deepseek.com',
+      apiKey: apiKey, 
+    });
+
+    const { topic, goal } = await req.json();
 
     const systemPrompt = `
-      你是一个精通帕累托法则（80/20法则）的顶级课程设计师。
-      用户的目标是学习：${topic}。
-      具体应用场景是：${goal}。
-      
-      请严格按照以下 JSON 格式输出学习路径，不要输出任何多余的废话，不要输出 Markdown 标记（如 \`\`\`json），只输出纯 JSON 字符串：
-      {
-        "core_concepts": [
-          {"title": "概念名称", "description": "简短解释"}
-        ],
-        "mini_projects": [
-          {"level": "初级", "title": "项目名称", "description": "项目描述", "steps": ["步骤1", "步骤2"]},
-          {"level": "中级", "title": "项目名称", "description": "项目描述", "steps": ["步骤1", "步骤2"]},
-          {"level": "高级", "title": "项目名称", "description": "项目描述", "steps": ["步骤1", "步骤2"]}
-        ],
-        "pitfalls": [
-          {"problem": "常见难点", "solution": "解决方案"}
-        ]
-      }
+      你是一个课程设计师。用户想学 ${topic} 来做 ${goal}。
+      请严格按照 JSON 格式输出 80/20 学习路径。
+      不要输出 Markdown 标记。不要输出寒暄的话。
+      JSON 结构必须包含: core_concepts, mini_projects, pitfalls。
     `;
 
     const completion = await openai.chat.completions.create({
       model: "deepseek-chat",
       messages: [
-        { role: "system", content: "你是一个只输出纯 JSON 的助手。" },
+        { role: "system", content: "你是一个只输出纯 JSON 的程序。" },
         { role: "user", content: systemPrompt },
       ],
       temperature: 1.1,
     });
 
     let content = completion.choices[0].message.content;
-    
-    // Debug: 打印原始返回内容，方便排查
-    console.log("[DeepSeek] 原始返回:", content);
+    console.log("DeepSeek 原始返回:", content);
 
-    // 2. 关键修复：清洗数据，防止 Markdown 标记导致 JSON 解析失败
-    // 有时候 AI 会返回 ```json { ... } ```，需要把 ```json 和 ``` 去掉
-    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    // 3. 数据清洗 (防止 AI 返回 ```json 等标记)
+    content = content.replace(/```json/g, '').replace(/```/g, '');
+    const firstBrace = content.indexOf('{');
+    const lastBrace = content.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      content = content.substring(firstBrace, lastBrace + 1);
+    }
 
     const data = JSON.parse(content);
-    
     return NextResponse.json(data);
 
   } catch (error) {
-    // 3. 打印详细错误到终端
-    console.error('------- API 请求失败 -------');
-    console.error('错误信息:', error.message);
-    if (error.response) {
-        console.error('DeepSeek 响应状态:', error.response.status);
-        console.error('DeepSeek 响应数据:', error.response.data);
-    }
-    console.error('---------------------------');
-
-    return NextResponse.json({ error: 'DeepSeek API Error' }, { status: 500 });
+    console.error('❌ 处理失败:', error);
+    return NextResponse.json({ error: '生成失败，请检查服务器日志' }, { status: 500 });
   }
 }
