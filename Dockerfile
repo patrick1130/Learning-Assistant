@@ -1,11 +1,15 @@
+# ---------------------------------------------------
+# 修复：将基础镜像从 node:18-alpine 改为 node:20-alpine
+# ---------------------------------------------------
+
 # 阶段 1：安装依赖
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./ 
 RUN npm ci
 
 # 阶段 2：构建应用
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -13,7 +17,7 @@ COPY . .
 RUN npm run build
 
 # 阶段 3：生产环境运行
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV production
 
