@@ -52,13 +52,15 @@ function ConceptCard({ item, topic, goal, onRead }: { item: CoreConcept, topic: 
       <p className="text-sm text-slate-600 pl-7 opacity-80">{item.short_desc}</p>
       
       {isOpen && (
-        <div className="mt-4 pt-4 border-t border-white/50 text-sm leading-7 text-slate-700 animate-fade-in cursor-default" onClick={e => e.stopPropagation()}>
+        <div className="mt-4 pt-4 border-t border-purple-100 text-sm leading-7 text-slate-700 animate-fade-in cursor-default" onClick={e => e.stopPropagation()}>
           {loading ? (
-            <div className="flex items-center gap-2 text-purple-500 py-2"><span className="animate-bounce">🪄</span> AI 正在施法中...</div>
+            <div className="flex items-center gap-2 text-purple-500 py-2 justify-center">
+              <span className="animate-spin">🪄</span> 魔法施展中...
+            </div>
           ) : (
             <>
               {data?.visual_svg && (
-                <div className="mb-4 p-4 bg-white/40 rounded-xl border border-white/60 flex justify-center" dangerouslySetInnerHTML={{ __html: data.visual_svg }} />
+                <div className="mb-4 p-4 bg-purple-50/50 rounded-xl border border-purple-100 flex justify-center shadow-inner" dangerouslySetInnerHTML={{ __html: data.visual_svg }} />
               )}
               <div className="whitespace-pre-wrap">{data?.content}</div>
             </>
@@ -105,7 +107,7 @@ function ProjectCard({ proj, topic, goal, onRead }: { proj: MiniProject, topic: 
       </button>
 
       {showAnswer && (
-        <div className="mt-3 p-5 bg-slate-800 text-slate-50 rounded-xl text-sm whitespace-pre-wrap font-mono relative overflow-hidden">
+        <div className="mt-3 p-5 bg-slate-800 text-slate-50 rounded-xl text-sm whitespace-pre-wrap font-mono relative overflow-hidden shadow-inner">
           {loading ? <div className="text-center py-4 text-pink-200">🔮 水晶球正在显影...</div> : (
              <>
                {data?.visual_svg && <div className="mb-4 p-4 bg-white/10 rounded-xl flex justify-center" dangerouslySetInnerHTML={{ __html: data.visual_svg }} />}
@@ -217,11 +219,11 @@ export default function Home() {
   }, [result, topic]);
 
   return (
-    // 关键修正：min-h-screen 确保铺满屏幕，justify-center items-start pt-20 确保卡片在视觉中心偏上
-    <main className="min-h-screen p-4 flex justify-center items-start pt-20">
+    // 关键修正：items-start pt-20 确保卡片在上方
+    <main className="min-h-screen p-4 flex flex-col items-center pt-20 pb-20">
       
-      {/* 关键修正：max-w-xl 限制宽度为 576px，这会让卡片变窄，变精致 */}
-      <div className="w-full max-w-xl space-y-8">
+      {/* 核心修正：max-w-lg 强制宽度，还原精致感 */}
+      <div className="w-full max-w-lg space-y-8">
         
         {/* 顶部标题 */}
         <header className="text-center">
@@ -231,15 +233,13 @@ export default function Home() {
           <p className="text-white/90 font-medium text-lg">✨ 你的专属 AI 魔法导师 ✨</p>
         </header>
 
-        {/* 核心交互区 (输入框) */}
+        {/* 核心交互区 */}
         <div className="glass-card p-8 transform transition-all hover:scale-[1.01] duration-500">
           {!result ? (
             <div className="space-y-8 text-center">
               <h2 className="text-2xl font-bold text-slate-700">👋 嗨！今天想点亮什么技能？</h2>
               
-              {/* 输入框垂直排列，上下有间距，确保不拥挤 */}
               <div className="flex flex-col gap-6">
-                
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-purple-500 uppercase tracking-wider block">我想学习</label>
                   <input 
@@ -259,7 +259,6 @@ export default function Home() {
                     placeholder="例如：解几何证明题" 
                   />
                 </div>
-
               </div>
 
               <button 
@@ -271,7 +270,6 @@ export default function Home() {
               </button>
             </div>
           ) : (
-            // 结果页头部：进度条
             <div className="text-center">
               <div className="flex justify-between items-end mb-2 px-1">
                 <span className="font-bold text-slate-600 text-sm">本章探索进度</span>
@@ -293,46 +291,39 @@ export default function Home() {
         {/* 内容展示区 */}
         {result && (
           <div className="space-y-8 pb-20 animate-fade-in">
-            
-            {/* 脑图 */}
             <section className="glass-card p-2 rounded-3xl shadow-lg overflow-hidden">
                <MindMapViewer markdown={markdownContent} title={topic} />
             </section>
 
-            {/* 1. 概念列表 */}
             <div>
               <h2 className="text-xl font-bold text-white drop-shadow-sm mb-4 flex items-center pl-2">
                 <span className="bg-white/30 w-8 h-8 rounded-lg flex items-center justify-center mr-2 backdrop-blur-sm">🧩</span> 
-                知识碎片 (Concepts)
+                知识碎片
               </h2>
-              {/* 改回单列显示，在窄屏幕下体验更好 */}
               <div className="flex flex-col gap-4">
                 {result.core_concepts.map((item, idx) => <ConceptCard key={idx} item={item} topic={topic} goal={goal} onRead={handleItemRead} />)}
               </div>
             </div>
 
-            {/* 2. 项目列表 */}
             <div>
               <h2 className="text-xl font-bold text-white drop-shadow-sm mb-4 flex items-center pl-2">
                 <span className="bg-white/30 w-8 h-8 rounded-lg flex items-center justify-center mr-2 backdrop-blur-sm">🏆</span> 
-                技能试炼 (Quests)
+                技能试炼
               </h2>
               <div className="space-y-5">
                 {result.mini_projects.map((proj, idx) => <ProjectCard key={idx} proj={proj} topic={topic} goal={goal} onRead={handleItemRead} />)}
               </div>
             </div>
 
-            {/* 3. 避坑指南 */}
             <div>
               <h2 className="text-xl font-bold text-white drop-shadow-sm mb-4 flex items-center pl-2">
                 <span className="bg-white/30 w-8 h-8 rounded-lg flex items-center justify-center mr-2 backdrop-blur-sm">🛡️</span> 
-                防御结界 (Shields)
+                防御结界
               </h2>
               <div className="grid gap-4">
                 {result.pitfalls.map((pit, idx) => <PitfallCard key={idx} pit={pit} topic={topic} goal={goal} />)}
               </div>
             </div>
-
           </div>
         )}
       </div>

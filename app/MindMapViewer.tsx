@@ -20,9 +20,9 @@ export default function MindMapViewer({ markdown, title }: MindMapViewerProps) {
       const { root } = transformer.transform(markdown);
       
       if (!mmRef.current) {
-        // 创建实例，关闭工具栏以保持界面整洁
+        // 创建实例
         mmRef.current = Markmap.create(svgRef.current, {
-          zoom: true,
+          zoom: true, 
           pan: true,
         });
       }
@@ -48,7 +48,7 @@ export default function MindMapViewer({ markdown, title }: MindMapViewerProps) {
   };
 
   return (
-    <div className="w-full h-[400px] md:h-[500px] bg-white/50 rounded-3xl border border-white/60 shadow-inner relative overflow-hidden group">
+    <div className="w-full h-[400px] bg-white/50 rounded-3xl border border-white/60 shadow-inner relative overflow-hidden group">
       
       {/* 脑图画布 */}
       <svg ref={svgRef} className="w-full h-full block" />
