@@ -3,35 +3,46 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    // 接收参数：type(类型), item(当前点击的条目内容), context(上下文: topic+goal)
     const { type, item, topic, goal } = await req.json();
     const apiKey = process.env.DEEPSEEK_API_KEY;
-
     const openai = new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey });
 
     let userPrompt = "";
     
-    // 根据点击的按钮类型，动态构建 Prompt
+    // SVG 画图指令
+    const commonInstruction = `
+      请返回 JSON 格式。
+      如果该内容涉及几何图形、物理模型、流程、结构或位置关系，请务必在 "visual_svg" 字段中提供一段 SVG 代码。
+      
+      SVG 要求：
+      1. 风格可爱、扁平化。
+      2. 配色柔和（如 #a18cd1, #fad0c4, #ff9a9e, #66ccff）。
+      3. 必须是完整的 <svg> 标签，包含 viewBox，确保图形居中且不被截断。
+      4. 如果不需要图，"visual_svg" 留空。
+      5. 文字解释放在 "content" 字段，语言要适合初中女生，通俗易懂。
+    `;
+
     if (type === 'concept_detail') {
       userPrompt = `
-        背景：用户正在学习 ${topic}，目标是 ${goal}。
-        当前概念：${item.title}。
-        任务：请给出该概念的详细原理解释（200字左右），通俗易懂。
+        用户是初中女生，正在学习 ${topic}。
+        请详细解释概念：${item.title}。
+        ${commonInstruction}
       `;
     } else if (type === 'project_solution') {
       userPrompt = `
-        背景：用户正在做项目 ${item.title} (学习 ${topic})。
-        任务：请给出详细的解答指南。如果是编程，请提供核心代码片段；如果是操作，请提供具体步骤。
+        用户正在做项目 ${item.title} (目标: ${goal})。
+        请提供详细解答步骤或代码。
+        ${commonInstruction}
       `;
     } else if (type === 'pitfall_expand') {
+      // 避坑指南逻辑保持 JSON 结构
       userPrompt = `
-        背景：用户在学习 ${topic} 时遇到了坑：${item.problem}。
-        任务：请提供 JSON 格式的扩展内容，包含：
-        1. detailed_explanation (详细解释)
-        2. example_bad (错误示例)
-        3. example_good (正确示例)
-        4. practice_exercises (数组，含3个 question 和 answer)
-        
+        用户遇到坑：${item.problem}。
+        请提供 JSON 扩展内容，包含:
+        - detailed_explanation (详细解释)
+        - example_bad (错误示例)
+        - example_good (正确示例)
+        - practice_exercises (3道练习题及答案)
         只输出 JSON。
       `;
     }
@@ -39,20 +50,11 @@ export async function POST(req) {
     const completion = await openai.chat.completions.create({
       model: "deepseek-chat",
       messages: [{ role: "user", content: userPrompt }],
-      // 只有避坑指南需要 JSON 模式，其他可以直接返回文本
-      response_format: type === 'pitfall_expand' ? { type: "json_object" } : { type: "text" }
+      response_format: { type: "json_object" },
     });
 
-    let content = completion.choices[0].message.content;
-    
-    // 如果是 JSON，简单清洗一下
-    if (type === 'pitfall_expand') {
-        content = content.replace(/```json|```/g, '');
-        return NextResponse.json(JSON.parse(content));
-    }
-
-    // 其他情况直接返回文本
-    return NextResponse.json({ content });
+    let content = completion.choices[0].message.content.replace(/```json|```/g, '');
+    return NextResponse.json(JSON.parse(content));
 
   } catch (error) {
     console.error(error);
