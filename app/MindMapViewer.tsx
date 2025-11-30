@@ -6,7 +6,7 @@ import { Markmap } from 'markmap-view';
 
 interface MindMapViewerProps {
   markdown: string;
-  title: string; // 用于下载文件名
+  title: string;
 }
 
 const transformer = new Transformer();
@@ -23,19 +23,13 @@ export default function MindMapViewer({ markdown, title }: MindMapViewerProps) {
         mmRef.current = Markmap.create(svgRef.current);
       }
       
-      // 设置一些选项让脑图更好看
+      // 优化显示参数
       mmRef.current.setData(root);
       mmRef.current.fit();
     }
   }, [markdown]);
 
-  // 复位视图
-  const handleReset = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    mmRef.current?.fit();
-  };
-
-  // 下载脑图
+  // 下载功能
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!markdown) return;
@@ -56,32 +50,17 @@ export default function MindMapViewer({ markdown, title }: MindMapViewerProps) {
       {/* 脑图画布 */}
       <svg ref={svgRef} className="w-full h-full block" />
       
-      {/* 右上角悬浮按钮组 (绝对定位 + 高层级) */}
-      <div className="absolute top-4 right-4 z-50 flex gap-2">
-        
-        {/* 复位按钮 */}
-        <button 
-          onClick={handleReset}
-          className="bg-white/80 hover:bg-purple-50 text-purple-600 px-3 py-2 rounded-xl shadow-md border border-purple-100 transition-all active:scale-95 flex items-center gap-1 backdrop-blur-sm"
-          title="回到中心"
-        >
-          <span className="text-lg">🎯</span>
-          <span className="text-xs font-bold text-slate-600 hidden md:inline">复位</span>
-        </button>
+      {/* 右上角：只保留下载按钮 */}
+      <button 
+        onClick={handleDownload}
+        className="absolute top-4 right-4 bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-xl shadow-md border border-purple-400 transition-all active:scale-95 flex items-center gap-1 z-50"
+        title="保存到电脑"
+      >
+        <span className="text-lg">📥</span>
+        <span className="text-xs font-bold hidden md:inline">下载</span>
+      </button>
 
-        {/* 下载按钮 */}
-        <button 
-          onClick={handleDownload}
-          className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-xl shadow-md border border-purple-400 transition-all active:scale-95 flex items-center gap-1"
-          title="保存到电脑"
-        >
-          <span className="text-lg">📥</span>
-          <span className="text-xs font-bold hidden md:inline">下载</span>
-        </button>
-
-      </div>
-
-      {/* 左下角可爱的提示 */}
+      {/* 左下角提示 */}
       <div className="absolute bottom-3 left-4 bg-white/60 px-3 py-1 rounded-full text-xs text-purple-400 border border-white pointer-events-none backdrop-blur-sm">
         ✨ 滚轮缩放 · 拖拽移动
       </div>

@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 70, 60, 90; /* 深紫色文字 */
+  --foreground-rgb: 70, 60, 90;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  /* 梦幻的极光渐变背景 */
+  /* 柔和的极光渐变背景 */
   background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #ff9a9e, #fad0c4);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
@@ -21,14 +21,14 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* 毛玻璃卡片 - 核心设计元素 */
+/* 核心：毛玻璃卡片 */
 .glass-card {
-  background: rgba(255, 255, 255, 0.65); /* 半透明白 */
-  backdrop-filter: blur(16px);            /* 模糊背景 */
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); /* 柔和阴影 */
-  border-radius: 24px; /* 大圆角 */
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  border-radius: 24px;
 }
 
 /* 填空式输入框 */
@@ -37,6 +37,7 @@ body {
   border: 2px solid transparent;
   transition: all 0.3s ease;
   color: #6b4c9a;
+  text-align: center;
 }
 .glass-input:focus {
   background: white;
@@ -45,7 +46,7 @@ body {
   outline: none;
 }
 
-/* 简单的淡入动画 */
+/* 动画 */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -54,9 +55,7 @@ body {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* 脑图容器 */
 .markmap {
   width: 100%;
   height: 100%;
-  font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* 稍微活泼点的字体 */
 }

@@ -23,7 +23,7 @@ async function fetchExpand(type: string, item: any, topic: string, goal: string)
   return await res.json();
 }
 
-// --- 组件 1: 知识碎片卡片 ---
+// --- 组件 1: 概念卡片 ---
 function ConceptCard({ item, topic, goal, onRead }: { item: CoreConcept, topic: string, goal: string, onRead: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState<{content: string, visual_svg?: string} | null>(null);
@@ -35,7 +35,7 @@ function ConceptCard({ item, topic, goal, onRead }: { item: CoreConcept, topic: 
       const res = await fetchExpand('concept_detail', item, topic, goal);
       setData(res);
       setLoading(false);
-      onRead(); // 增加进度
+      onRead();
     }
     setIsOpen(!isOpen);
   };
@@ -57,7 +57,6 @@ function ConceptCard({ item, topic, goal, onRead }: { item: CoreConcept, topic: 
             <div className="flex items-center gap-2 text-purple-500 py-2"><span className="animate-bounce">🪄</span> AI 正在施法中...</div>
           ) : (
             <>
-              {/* 如果有图，显示图 */}
               {data?.visual_svg && (
                 <div className="mb-4 p-4 bg-white/40 rounded-xl border border-white/60 flex justify-center" dangerouslySetInnerHTML={{ __html: data.visual_svg }} />
               )}
@@ -70,7 +69,7 @@ function ConceptCard({ item, topic, goal, onRead }: { item: CoreConcept, topic: 
   );
 }
 
-// --- 组件 2: 技能试炼卡片 ---
+// --- 组件 2: 项目卡片 ---
 function ProjectCard({ proj, topic, goal, onRead }: { proj: MiniProject, topic: string, goal: string, onRead: () => void }) {
   const [showAnswer, setShowAnswer] = useState(false);
   const [data, setData] = useState<{content: string, visual_svg?: string} | null>(null);
@@ -94,8 +93,6 @@ function ProjectCard({ proj, topic, goal, onRead }: { proj: MiniProject, topic: 
         <span className="bg-pink-100 text-pink-600 text-xs font-bold px-3 py-1 rounded-full border border-pink-200">{proj.level}</span>
       </div>
       <p className="text-slate-600 mb-4 text-sm">{proj.description}</p>
-      
-      {/* 步骤列表 */}
       <div className="bg-white/40 p-4 rounded-xl mb-4 border border-white/60">
         <div className="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">任务清单</div>
         <ul className="space-y-1">
@@ -121,7 +118,7 @@ function ProjectCard({ proj, topic, goal, onRead }: { proj: MiniProject, topic: 
   );
 }
 
-// --- 组件 3: 防御结界卡片 (避坑) ---
+// --- 组件 3: 避坑指南 ---
 function PitfallCard({ pit, topic, goal }: { pit: Pitfall, topic: string, goal: string }) {
   const [expandedData, setExpandedData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -147,36 +144,26 @@ function PitfallCard({ pit, topic, goal }: { pit: Pitfall, topic: string, goal: 
           <p className="text-xs text-indigo-500 mt-1">{pit.solution}</p>
         </div>
       </div>
-      
       <div className="flex gap-2">
         {[{k:'detail',l:'📜 详解'},{k:'example',l:'🆚 栗子'},{k:'practice',l:'✍️ 练习'}].map(b => (
           <button key={b.k} onClick={() => loadData(b.k)} className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === b.k ? 'bg-indigo-500 text-white shadow-md' : 'bg-white text-indigo-500 hover:bg-indigo-50'}`}>{b.l}</button>
         ))}
       </div>
-
       <div className="mt-3">
         {loading && <div className="text-center text-xs text-indigo-300 py-2">防御术加载中...</div>}
-        
-        {!loading && expandedData && activeTab === 'detail' && (
-          <div className="bg-white/80 p-3 rounded-xl text-sm text-slate-700 animate-fade-in">{expandedData.detailed_explanation}</div>
-        )}
-        
+        {!loading && expandedData && activeTab === 'detail' && <div className="bg-white/80 p-3 rounded-xl text-sm text-slate-700 animate-fade-in">{expandedData.detailed_explanation}</div>}
         {!loading && expandedData && activeTab === 'example' && (
           <div className="space-y-2 text-xs animate-fade-in">
              <div className="bg-red-50 p-2 rounded-lg text-red-700 border border-red-100">❌ {expandedData.example_bad}</div>
              <div className="bg-green-50 p-2 rounded-lg text-green-700 border border-green-100">✅ {expandedData.example_good}</div>
           </div>
         )}
-        
         {!loading && expandedData && activeTab === 'practice' && (
           <div className="space-y-2 animate-fade-in">
             {expandedData.practice_exercises?.map((q:any, i:number) => (
               <div key={i} className="bg-white/80 p-3 rounded-xl border border-indigo-50">
                 <div className="text-xs font-bold text-indigo-800 mb-1">Q{i+1}: {q.question}</div>
-                <details className="text-xs text-slate-400 cursor-pointer group">
-                  <summary className="group-hover:text-indigo-500 transition-colors">偷看答案</summary>
-                  <p className="mt-2 text-slate-600 bg-indigo-50 p-2 rounded-lg">{q.answer}</p>
-                </details>
+                <details className="text-xs text-slate-400 cursor-pointer group"><summary className="group-hover:text-indigo-500 transition-colors">偷看答案</summary><p className="mt-2 text-slate-600 bg-indigo-50 p-2 rounded-lg">{q.answer}</p></details>
               </div>
             ))}
           </div>
@@ -209,7 +196,6 @@ export default function Home() {
       });
       const data = await res.json();
       setResult(data);
-      // 计算总任务数 = 概念数 + 项目数
       setTotalItems((data.core_concepts?.length || 0) + (data.mini_projects?.length || 0));
     } catch (e) { alert('哎呀，连接断开了，重试一下吧！'); } finally { setLoading(false); }
   };
@@ -248,10 +234,10 @@ export default function Home() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-slate-700 text-center mb-4">👋 嗨！今天想点亮什么技能？</h2>
               
-              {/* 对话式填空输入 */}
+              {/* 修复后的输入框布局：确保水平排列 */}
               <div className="flex flex-col gap-4 text-lg text-slate-600 items-center bg-white/40 p-6 rounded-2xl border border-white/50">
                 <div className="w-full flex flex-col md:flex-row md:items-center gap-2">
-                  <span>我想学习</span>
+                  <span className="whitespace-nowrap">我想学习</span>
                   <input 
                     className="glass-input flex-1 px-4 py-3 rounded-xl text-purple-700 font-bold text-center focus:scale-105"
                     value={topic}
@@ -260,7 +246,7 @@ export default function Home() {
                   />
                 </div>
                 <div className="w-full flex flex-col md:flex-row md:items-center gap-2">
-                  <span>是为了做</span>
+                  <span className="whitespace-nowrap">是为了做</span>
                   <input 
                     className="glass-input flex-1 px-4 py-3 rounded-xl text-purple-700 font-bold text-center focus:scale-105"
                     value={goal}
