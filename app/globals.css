@@ -8,8 +8,9 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  /* 柔和的极光渐变背景 */
-  background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #ff9a9e, #fad0c4);
+  /* 恢复柔和的极光渐变背景 */
+  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); /* 备用背景 */
+  background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fad0c4, #a18cd1);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
   min-height: 100vh;
@@ -21,41 +22,40 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-/* 核心：毛玻璃卡片 */
+/* 核心：毛玻璃卡片 (更通透) */
 .glass-card {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
   border-radius: 24px;
 }
 
-/* 填空式输入框 */
+/* 输入框：变成圆润的胶囊状，去掉丑边框 */
 .glass-input {
-  background: rgba(255, 255, 255, 0.5);
-  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid transparent; /* 默认无边框 */
   transition: all 0.3s ease;
   color: #6b4c9a;
   text-align: center;
+  border-radius: 9999px; /* 胶囊圆角 */
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
 }
+
 .glass-input:focus {
   background: white;
-  border-color: #d8b4fe;
+  border-color: #d8b4fe; /* 聚焦时显示淡紫色边框 */
   box-shadow: 0 0 0 4px rgba(216, 180, 254, 0.3);
   outline: none;
+  transform: scale(1.02); /* 微微放大 */
 }
 
-/* 动画 */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.markmap {
-  width: 100%;
-  height: 100%;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }

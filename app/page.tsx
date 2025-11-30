@@ -41,7 +41,7 @@ function ConceptCard({ item, topic, goal, onRead }: { item: CoreConcept, topic: 
   };
 
   return (
-    <div onClick={handleToggle} className={`glass-card p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 ${isOpen ? 'ring-2 ring-purple-300 bg-white/80' : 'hover:bg-white/60'}`}>
+    <div onClick={handleToggle} className={`glass-card p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 ${isOpen ? 'ring-2 ring-purple-300 bg-white/90' : 'hover:bg-white/60'}`}>
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
           <span>{isOpen ? '✨' : '⭐'}</span>
@@ -217,38 +217,39 @@ export default function Home() {
   }, [result, topic]);
 
   return (
-    <main className="p-4 md:p-8 flex justify-center">
-      <div className="w-full max-w-3xl">
+    <main className="min-h-screen p-4 md:p-8 flex justify-center items-start pt-12 md:pt-20">
+      <div className="w-full max-w-2xl"> {/* 限制最大宽度，不再是丑陋的长条 */}
         
-        {/* 顶部标题 */}
-        <header className="text-center mb-8 pt-8">
-          <h1 className="text-4xl font-extrabold text-white drop-shadow-md mb-2 tracking-tight">
-            Pareto <span className="text-purple-600 bg-white/90 px-2 py-1 rounded-xl transform -rotate-2 inline-block shadow-lg">Magic</span>
+        {/* 顶部 Header */}
+        <header className="text-center mb-10">
+          <h1 className="text-5xl font-extrabold text-white drop-shadow-md mb-3 tracking-tight">
+            Pareto <span className="text-purple-600 bg-white/90 px-3 py-1 rounded-2xl transform -rotate-2 inline-block shadow-lg">Magic</span>
           </h1>
-          <p className="text-white/90 font-medium">✨ 80/20 极简学习法 · 你的专属 AI 导师 ✨</p>
+          <p className="text-white font-bold text-lg opacity-90">✨ 80/20 极简学习法 · 你的专属 AI 导师 ✨</p>
         </header>
 
-        {/* 核心交互区 */}
-        <div className="glass-card p-6 md:p-8 mb-8 transform transition-all hover:scale-[1.005] duration-500">
+        {/* 核心交互区 (输入框) */}
+        <div className="glass-card p-8 mb-8 transform transition-all hover:scale-[1.01] duration-500">
           {!result ? (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-slate-700 text-center mb-4">👋 嗨！今天想点亮什么技能？</h2>
+            <div className="space-y-8 text-center">
+              <h2 className="text-2xl font-bold text-slate-700">👋 嗨！今天想点亮什么技能？</h2>
               
-              {/* 修复后的输入框布局：确保水平排列 */}
-              <div className="flex flex-col gap-4 text-lg text-slate-600 items-center bg-white/40 p-6 rounded-2xl border border-white/50">
-                <div className="w-full flex flex-col md:flex-row md:items-center gap-2">
-                  <span className="whitespace-nowrap">我想学习</span>
+              {/* 美化后的对话式输入 - 垂直排列，更聚焦 */}
+              <div className="flex flex-col gap-6 px-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-purple-400 uppercase tracking-wide">我想学习...</label>
                   <input 
-                    className="glass-input flex-1 px-4 py-3 rounded-xl text-purple-700 font-bold text-center focus:scale-105"
+                    className="glass-input w-full px-4 py-4 text-lg font-bold placeholder-purple-200"
                     value={topic}
                     onChange={e => setTopic(e.target.value)}
-                    placeholder="例如：圆的性质" 
+                    placeholder="例如：勾股定理" 
                   />
                 </div>
-                <div className="w-full flex flex-col md:flex-row md:items-center gap-2">
-                  <span className="whitespace-nowrap">是为了做</span>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-purple-400 uppercase tracking-wide">是为了做...</label>
                   <input 
-                    className="glass-input flex-1 px-4 py-3 rounded-xl text-purple-700 font-bold text-center focus:scale-105"
+                    className="glass-input w-full px-4 py-4 text-lg font-bold placeholder-purple-200"
                     value={goal}
                     onChange={e => setGoal(e.target.value)}
                     placeholder="例如：解几何证明题" 
@@ -259,9 +260,9 @@ export default function Home() {
               <button 
                 onClick={handleGenerate} 
                 disabled={loading} 
-                className="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-2xl font-bold text-xl shadow-lg shadow-purple-200 transform transition-all active:scale-95 hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full mt-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-full font-bold text-xl shadow-xl shadow-purple-200 transform transition-all active:scale-95 hover:shadow-2xl hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading ? '🪄 正在绘制魔法阵...' : '🚀 开启学习之旅'}
+                {loading ? '🪄 魔法阵绘制中...' : '🚀 开启学习之旅'}
               </button>
             </div>
           ) : (
