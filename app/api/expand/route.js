@@ -9,39 +9,34 @@ export async function POST(req) {
 
     let userPrompt = "";
     
-    // SVG 画图指令
+    // SVG 画图指令 - 专门要求“可爱、柔和”的风格
     const commonInstruction = `
       请返回 JSON 格式。
-      如果该内容涉及几何图形、物理模型、流程、结构或位置关系，请务必在 "visual_svg" 字段中提供一段 SVG 代码。
       
+      【关于画图】
+      如果这个概念（如几何、物理、流程、对比）适合用图表示，请在 "visual_svg" 字段中提供一段 SVG 代码。
       SVG 要求：
-      1. 风格可爱、扁平化。
-      2. 配色柔和（如 #a18cd1, #fad0c4, #ff9a9e, #66ccff）。
-      3. 必须是完整的 <svg> 标签，包含 viewBox，确保图形居中且不被截断。
+      1. 风格：可爱、手绘风或扁平化。
+      2. 配色：莫兰迪色系 (如 #b39ddb, #ffccbc, #80deea)。
+      3. 必须是完整的 <svg> 标签，包含 viewBox。
       4. 如果不需要图，"visual_svg" 留空。
-      5. 文字解释放在 "content" 字段，语言要适合初中女生，通俗易懂。
+
+      【关于文字】
+      1. 内容放在 "content" 字段。
+      2. 解释要通俗易懂，适合初中生，多用生活中的比喻。
     `;
 
     if (type === 'concept_detail') {
-      userPrompt = `
-        用户是初中女生，正在学习 ${topic}。
-        请详细解释概念：${item.title}。
-        ${commonInstruction}
-      `;
+      userPrompt = `用户是初中女生。请详细解释概念：${item.title} (属于 ${topic})。${commonInstruction}`;
     } else if (type === 'project_solution') {
-      userPrompt = `
-        用户正在做项目 ${item.title} (目标: ${goal})。
-        请提供详细解答步骤或代码。
-        ${commonInstruction}
-      `;
+      userPrompt = `用户正在做项目 ${item.title}。请提供详细步骤或解答。${commonInstruction}`;
     } else if (type === 'pitfall_expand') {
-      // 避坑指南逻辑保持 JSON 结构
       userPrompt = `
         用户遇到坑：${item.problem}。
         请提供 JSON 扩展内容，包含:
-        - detailed_explanation (详细解释)
-        - example_bad (错误示例)
-        - example_good (正确示例)
+        - detailed_explanation (原理)
+        - example_bad (错误例子)
+        - example_good (正确例子)
         - practice_exercises (3道练习题及答案)
         只输出 JSON。
       `;

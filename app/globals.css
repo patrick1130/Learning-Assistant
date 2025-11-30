@@ -3,47 +3,46 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 70, 60, 90; /* 深紫色文字 */
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb)))
-    rgb(var(--background-start-rgb));
-}
-
-/* 梦幻背景动画 */
-@keyframes gradient-xy {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.animate-gradient {
-  background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
+  /* 梦幻的极光渐变背景 */
+  background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #ff9a9e, #fad0c4);
   background-size: 400% 400%;
-  animation: gradient-xy 15s ease infinite;
+  animation: gradientBG 15s ease infinite;
+  min-height: 100vh;
 }
 
-/* 毛玻璃卡片通用样式 */
+@keyframes gradientBG {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 毛玻璃卡片 - 核心设计元素 */
 .glass-card {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.65); /* 半透明白 */
+  backdrop-filter: blur(16px);            /* 模糊背景 */
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); /* 柔和阴影 */
+  border-radius: 24px; /* 大圆角 */
 }
 
+/* 填空式输入框 */
 .glass-input {
   background: rgba(255, 255, 255, 0.5);
   border: 2px solid transparent;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  color: #6b4c9a;
 }
 .glass-input:focus {
   background: white;
-  border-color: #a18cd1;
-  box-shadow: 0 0 0 4px rgba(161, 140, 209, 0.2);
+  border-color: #d8b4fe;
+  box-shadow: 0 0 0 4px rgba(216, 180, 254, 0.3);
+  outline: none;
 }
 
 /* 简单的淡入动画 */
@@ -55,8 +54,9 @@ body {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* 针对脑图的样式优化 */
+/* 脑图容器 */
 .markmap {
   width: 100%;
   height: 100%;
+  font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; /* 稍微活泼点的字体 */
 }
