@@ -20,10 +20,13 @@ export default function MindMapViewer({ markdown, title }: MindMapViewerProps) {
       const { root } = transformer.transform(markdown);
       
       if (!mmRef.current) {
-        mmRef.current = Markmap.create(svgRef.current);
+        // 创建实例，关闭工具栏以保持界面整洁
+        mmRef.current = Markmap.create(svgRef.current, {
+          zoom: true,
+          pan: true,
+        });
       }
       
-      // 优化显示参数
       mmRef.current.setData(root);
       mmRef.current.fit();
     }
@@ -50,11 +53,11 @@ export default function MindMapViewer({ markdown, title }: MindMapViewerProps) {
       {/* 脑图画布 */}
       <svg ref={svgRef} className="w-full h-full block" />
       
-      {/* 右上角：只保留下载按钮 */}
+      {/* 右上角：仅保留下载按钮 */}
       <button 
         onClick={handleDownload}
         className="absolute top-4 right-4 bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded-xl shadow-md border border-purple-400 transition-all active:scale-95 flex items-center gap-1 z-50"
-        title="保存到电脑"
+        title="保存脑图"
       >
         <span className="text-lg">📥</span>
         <span className="text-xs font-bold hidden md:inline">下载</span>

@@ -41,7 +41,7 @@ function ConceptCard({ item, topic, goal, onRead }: { item: CoreConcept, topic: 
   };
 
   return (
-    <div onClick={handleToggle} className={`glass-card p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 ${isOpen ? 'ring-2 ring-purple-300 bg-white/90' : 'hover:bg-white/60'}`}>
+    <div onClick={handleToggle} className={`glass-card p-5 cursor-pointer transition-all duration-300 hover:-translate-y-1 ${isOpen ? 'ring-2 ring-purple-300 bg-white/80' : 'hover:bg-white/60'}`}>
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
           <span>{isOpen ? '✨' : '⭐'}</span>
@@ -217,27 +217,31 @@ export default function Home() {
   }, [result, topic]);
 
   return (
-    <main className="min-h-screen p-4 md:p-8 flex justify-center items-start pt-12 md:pt-20">
-      <div className="w-full max-w-2xl"> {/* 限制最大宽度，不再是丑陋的长条 */}
+    // 关键修正：min-h-screen 确保铺满屏幕，justify-center items-start pt-20 确保卡片在视觉中心偏上
+    <main className="min-h-screen p-4 flex justify-center items-start pt-20">
+      
+      {/* 关键修正：max-w-xl 限制宽度为 576px，这会让卡片变窄，变精致 */}
+      <div className="w-full max-w-xl space-y-8">
         
-        {/* 顶部 Header */}
-        <header className="text-center mb-10">
-          <h1 className="text-5xl font-extrabold text-white drop-shadow-md mb-3 tracking-tight">
-            Pareto <span className="text-purple-600 bg-white/90 px-3 py-1 rounded-2xl transform -rotate-2 inline-block shadow-lg">Magic</span>
+        {/* 顶部标题 */}
+        <header className="text-center">
+          <h1 className="text-5xl font-extrabold text-white drop-shadow-md mb-2 tracking-tight">
+            Pareto <span className="text-purple-600 bg-white/90 px-3 py-1 rounded-2xl transform -rotate-3 inline-block shadow-lg">Magic</span>
           </h1>
-          <p className="text-white font-bold text-lg opacity-90">✨ 80/20 极简学习法 · 你的专属 AI 导师 ✨</p>
+          <p className="text-white/90 font-medium text-lg">✨ 你的专属 AI 魔法导师 ✨</p>
         </header>
 
         {/* 核心交互区 (输入框) */}
-        <div className="glass-card p-8 mb-8 transform transition-all hover:scale-[1.01] duration-500">
+        <div className="glass-card p-8 transform transition-all hover:scale-[1.01] duration-500">
           {!result ? (
             <div className="space-y-8 text-center">
               <h2 className="text-2xl font-bold text-slate-700">👋 嗨！今天想点亮什么技能？</h2>
               
-              {/* 美化后的对话式输入 - 垂直排列，更聚焦 */}
-              <div className="flex flex-col gap-6 px-4">
+              {/* 输入框垂直排列，上下有间距，确保不拥挤 */}
+              <div className="flex flex-col gap-6">
+                
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-purple-400 uppercase tracking-wide">我想学习...</label>
+                  <label className="text-sm font-bold text-purple-500 uppercase tracking-wider block">我想学习</label>
                   <input 
                     className="glass-input w-full px-4 py-4 text-lg font-bold placeholder-purple-200"
                     value={topic}
@@ -247,7 +251,7 @@ export default function Home() {
                 </div>
                 
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-purple-400 uppercase tracking-wide">是为了做...</label>
+                  <label className="text-sm font-bold text-purple-500 uppercase tracking-wider block">是为了做</label>
                   <input 
                     className="glass-input w-full px-4 py-4 text-lg font-bold placeholder-purple-200"
                     value={goal}
@@ -255,12 +259,13 @@ export default function Home() {
                     placeholder="例如：解几何证明题" 
                   />
                 </div>
+
               </div>
 
               <button 
                 onClick={handleGenerate} 
                 disabled={loading} 
-                className="w-full mt-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-full font-bold text-xl shadow-xl shadow-purple-200 transform transition-all active:scale-95 hover:shadow-2xl hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed"
+                className="w-full mt-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-full font-bold text-xl shadow-xl shadow-purple-200 transform transition-all active:scale-95 hover:shadow-2xl hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? '🪄 魔法阵绘制中...' : '🚀 开启学习之旅'}
               </button>
@@ -290,7 +295,7 @@ export default function Home() {
           <div className="space-y-8 pb-20 animate-fade-in">
             
             {/* 脑图 */}
-            <section className="glass-card p-2 rounded-3xl shadow-lg">
+            <section className="glass-card p-2 rounded-3xl shadow-lg overflow-hidden">
                <MindMapViewer markdown={markdownContent} title={topic} />
             </section>
 
@@ -300,7 +305,8 @@ export default function Home() {
                 <span className="bg-white/30 w-8 h-8 rounded-lg flex items-center justify-center mr-2 backdrop-blur-sm">🧩</span> 
                 知识碎片 (Concepts)
               </h2>
-              <div className="grid gap-4 md:grid-cols-2">
+              {/* 改回单列显示，在窄屏幕下体验更好 */}
+              <div className="flex flex-col gap-4">
                 {result.core_concepts.map((item, idx) => <ConceptCard key={idx} item={item} topic={topic} goal={goal} onRead={handleItemRead} />)}
               </div>
             </div>
