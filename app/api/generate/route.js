@@ -3,32 +3,36 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    const { topic, goal } = await req.json();
     const apiKey = process.env.DEEPSEEK_API_KEY;
-
     if (!apiKey) return NextResponse.json({ error: 'Missing API Key' }, { status: 500 });
 
     const openai = new OpenAI({ baseURL: 'https://api.deepseek.com', apiKey });
+    const { topic, goal } = await req.json();
 
-    // 简化 Prompt，只求大纲，不求详情
+    // 简化 Prompt，只求 JSON 大纲
     const systemPrompt = `
-      用户想学 ${topic} 来做 ${goal}。
-      请输出 80/20 学习路径大纲。
-      要求：
-      1. JSON 格式。
-      2. 不要具体的长篇解释、不要代码、不要练习题。只要标题和简述。
+      用户是初中女生，想学 ${topic} 来做 ${goal}。
+      请输出一个帕累托最优（80/20）学习路径大纲。
       
-      格式示例:
+      【要求】
+      1. 必须是 JSON 格式。
+      2. 语气亲切、鼓励性强。
+      3. 只提供标题和简述，不要长篇大论。
+      
+      【JSON 结构】:
       {
-        "core_concepts": [{ "title": "...", "short_desc": "..." }],
-        "mini_projects": [{ "level": "...", "title": "...", "description": "...", "steps": ["..."] }],
-        "pitfalls": [{ "problem": "...", "solution": "..." }]
+        "core_concepts": [{ "title": "概念名称", "short_desc": "一句话可爱的简介" }],
+        "mini_projects": [{ "level": "Lv.1", "title": "项目名", "description": "项目简介", "steps": ["步骤1", "步骤2"] }],
+        "pitfalls": [{ "problem": "常见坑", "solution": "一句话解法" }]
       }
     `;
 
     const completion = await openai.chat.completions.create({
       model: "deepseek-chat",
-      messages: [{ role: "system", content: "输出纯 JSON" }, { role: "user", content: systemPrompt }],
+      messages: [
+        { role: "system", content: "你是一个输出 JSON 的学习规划师。" }, 
+        { role: "user", content: systemPrompt }
+      ],
       response_format: { type: "json_object" },
       temperature: 1.1
     });
@@ -37,6 +41,7 @@ export async function POST(req) {
     return NextResponse.json(JSON.parse(content));
 
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Failed' }, { status: 500 });
   }
 }
